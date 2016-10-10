@@ -16,6 +16,7 @@ import movie_data_helper
 import numpy as np
 import scipy
 import scipy.misc
+import scipy.stats as sp
 from sys import exit
 
 #credit to svd45 in edX forums
@@ -169,7 +170,7 @@ def compute_movie_rating_likelihood(M):
     return output
 
 
-def infer_true_movie_ratings(num_observations=-1):
+def infer_true_movie_ratings(num_observations=None):
     """
     For every movie, computes the posterior distribution and MAP estimate of
     the movie's true/inherent rating given the movie's observed ratings.
@@ -223,11 +224,12 @@ def infer_true_movie_ratings(num_observations=-1):
     for index in range(num_movies):
         movie_id = movie_id_list[index]
         y = movieDB.get_ratings(movie_id)
-        posteriors[index] = compute_posterior(prior, likelihood, y)
+        posteriors[index] = compute_posterior(prior, likelihood, y[:num_observations])
         MAP_ratings[index] = np.argmax(posteriors[index])
-        if index == 0:
+        """if index == 0:
             print(posteriors[index])
             print(MAP_ratings[index])
+        """
 
     #
     # END OF YOUR CODE FOR PART (d)
@@ -265,7 +267,7 @@ def compute_entropy(distribution):
     # - use log base 2
     # - enforce 0log0 = 0
 
-    entropy = 0
+    entropy = sp.entropy(distribution, None, 2)
     #
     # END OF YOUR CODE FOR PART (f)
     # -------------------------------------------------------------------------
@@ -297,6 +299,12 @@ def compute_true_movie_rating_posterior_entropies(num_observations):
     # YOUR CODE GOES HERE FOR PART (g)
     #
     # Make use of the compute_entropy function you coded in part (f).
+    posteriors, MAP_ratings = infer_true_movie_ratings(num_observations)
+    num_movies = len(posteriors)
+    posterior_entropies = np.zeros(num_movies)
+    
+    for index in range(num_movies):
+        posterior_entropies = compute_entropy(posteriors[index])
 
     #
     # END OF YOUR CODE FOR PART (g)
@@ -359,9 +367,58 @@ def main():
     # functions for each of the parts of this problem, and call them here.
 
     compute_movie_rating_likelihood(4);
-    infer_true_movie_ratings()
+    
+    """
+    movie 0
+    posterior:
+      [  0.00000000e+000,   0.00000000e+000,   0.00000000e+000,
+         0.00000000e+000,   0.00000000e+000,   0.00000000e+000,
+         2.08691952e-217,   7.41913971e-104,   1.00000000e+000,
+         3.12235460e-048,   2.56768318e-058]
+    MAP: 8
+    
+    movie 368
+    posterior:
+      [  1.09994247e-310,   2.34454016e-230,   6.94968263e-101,
+         5.15112217e-056,   1.00000000e+000,   2.01073200e-027,
+         3.68109845e-071,   5.25671748e-185,   5.83312733e-293,
+         0.00000000e+000,   0.00000000e+000]
+    MAP: 4
+    """
 
+    """    
+    posteriors, MAPs = infer_true_movie_ratings()
+    
+    print(posteriors[0])
+    print(MAPs[0])    
+    print(posteriors[368])
+    print(MAPs[368]) 
+    """
+    #print(len(np.argwhere(MAPs == 10)))
+    
+    num_entropy = np.zeros((2,200))
+    
+    for index in range(200):
+        num_entropy[1][index] = np.average(compute_true_movie_rating_posterior_entropies(index + 1))
+        num_entropy[0][index] = index + 1    
+    
+    """
+    num_entropy[1][0] = np.average(compute_true_movie_rating_posterior_entropies(1))
+    num_entropy[0][0] = 1
+    num_entropy[1][1] = np.average(compute_true_movie_rating_posterior_entropies(100))
+    num_entropy[0][1] = 100
+    num_entropy[1][2] = np.average(compute_true_movie_rating_posterior_entropies(199))
+    num_entropy[0][2] = 199
 
+    print(num_entropy)
+    """
+
+    plt.figure(1)
+    plt.title("Average of Entropies")
+    plt.xlabel("Number of Samples")
+    plt.ylabel("E (bits)", rotation='horizontal', position=(0, 1.01))
+    plt.plot(num_entropy[0], num_entropy[1])
+    plt.show()
     #
     # END OF YOUR CODE FOR TESTING
     # -------------------------------------------------------------------------

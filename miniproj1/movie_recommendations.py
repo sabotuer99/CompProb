@@ -98,8 +98,9 @@ def compute_posterior(prior, likelihood, y):
     #print(np.exp(log_prior + np.log(likelihood[y, :]).sum(axis=0)))
     
     unnormal = log_prior + np.log(likelihood[y, :]).sum(axis=0)
-    log_answer = unnormal - np.log(np.exp(unnormal).sum())
-    
+    #log_answer = unnormal - np.log(np.exp(unnormal).sum())
+    log_answer = unnormal - scipy.misc.logsumexp(unnormal)    
+				
     #
     # END OF YOUR CODE FOR PART (b)
     # -------------------------------------------------------------------------
@@ -135,11 +136,23 @@ def compute_movie_rating_likelihood(M):
     # probability distribution.
     #
 
+    for i in range(M):
+        for j in range(M):
+            if i == j:
+                likelihood[i][j] = 2
+            else:
+                likelihood[i][j] = 1 / abs(i - j)
+
+    print(likelihood)
+    
+    output = likelihood / likelihood.sum(axis=1)
+    print(output)
+
     #
     # END OF YOUR CODE FOR PART (c)
     # -------------------------------------------------------------------------
 
-    return likelihood
+    return output
 
 
 def infer_true_movie_ratings(num_observations=-1):
@@ -321,6 +334,9 @@ def main():
     # Place your code that calls the relevant functions here.  Make sure it's
     # easy for us graders to run your code. You may want to define multiple
     # functions for each of the parts of this problem, and call them here.
+
+    compute_movie_rating_likelihood(4);
+
 
     #
     # END OF YOUR CODE FOR TESTING

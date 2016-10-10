@@ -18,6 +18,18 @@ import scipy
 import scipy.misc
 from sys import exit
 
+#credit to svd45 in edX forums
+class MovieDB(object):
+    def __init__(self):
+        self.movie_list = movie_data_helper.get_movie_id_list()
+        self.ratings = {}
+
+    def get_ratings(self, movie_id):
+        if movie_id not in self.ratings:
+            self.ratings[movie_id] = movie_data_helper.get_ratings(movie_id)
+        return self.ratings[movie_id]
+
+movieDB = MovieDB()
 
 def compute_posterior(prior, likelihood, y):
     """
@@ -136,17 +148,19 @@ def compute_movie_rating_likelihood(M):
     # probability distribution.
     #
 
+    #likelihood = [ 2 if i == j else 1 / abs(i - j) for i in range(M) for j in range(M)]
+    
     for i in range(M):
         for j in range(M):
             if i == j:
                 likelihood[i][j] = 2
             else:
                 likelihood[i][j] = 1 / abs(i - j)
-
-    print(likelihood)
+    
+    #print(likelihood)
     
     output = likelihood / likelihood.sum(axis=1)
-    print(output)
+    #print(output)
 
     #
     # END OF YOUR CODE FOR PART (c)
@@ -205,6 +219,15 @@ def infer_true_movie_ratings(num_observations=-1):
     # These are the output variables - it's your job to fill them.
     posteriors = np.zeros((num_movies, M))
     MAP_ratings = np.zeros(num_movies)
+
+    for index in range(num_movies):
+        movie_id = movie_id_list[index]
+        y = movieDB.get_ratings(movie_id)
+        posteriors[index] = compute_posterior(prior, likelihood, y)
+        MAP_ratings[index] = np.argmax(posteriors[index])
+        if index == 0:
+            print(posteriors[index])
+            print(MAP_ratings[index])
 
     #
     # END OF YOUR CODE FOR PART (d)
@@ -336,6 +359,7 @@ def main():
     # functions for each of the parts of this problem, and call them here.
 
     compute_movie_rating_likelihood(4);
+    infer_true_movie_ratings()
 
 
     #

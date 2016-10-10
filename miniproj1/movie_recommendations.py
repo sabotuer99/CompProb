@@ -223,13 +223,15 @@ def infer_true_movie_ratings(num_observations=None):
 
     for index in range(num_movies):
         movie_id = movie_id_list[index]
-        y = movieDB.get_ratings(movie_id)
-        posteriors[index] = compute_posterior(prior, likelihood, y[:num_observations])
+        y = movieDB.get_ratings(movie_id)[:num_observations]
+        
+        posteriors[index] = compute_posterior(prior, likelihood, y)
         MAP_ratings[index] = np.argmax(posteriors[index])
-        """if index == 0:
-            print(posteriors[index])
-            print(MAP_ratings[index])
-        """
+        #if index == 0:
+        #    print(y)
+        #    print(posteriors[index])
+        #    print(MAP_ratings[index])
+        
 
     #
     # END OF YOUR CODE FOR PART (d)
@@ -304,7 +306,7 @@ def compute_true_movie_rating_posterior_entropies(num_observations):
     posterior_entropies = np.zeros(num_movies)
     
     for index in range(num_movies):
-        posterior_entropies = compute_entropy(posteriors[index])
+        posterior_entropies[index] = compute_entropy(posteriors[index])
 
     #
     # END OF YOUR CODE FOR PART (g)
@@ -366,7 +368,7 @@ def main():
     # easy for us graders to run your code. You may want to define multiple
     # functions for each of the parts of this problem, and call them here.
 
-    compute_movie_rating_likelihood(4);
+    #compute_movie_rating_likelihood(4);
     
     """
     movie 0
@@ -399,8 +401,10 @@ def main():
     num_entropy = np.zeros((2,200))
     
     for index in range(200):
-        num_entropy[1][index] = np.average(compute_true_movie_rating_posterior_entropies(index + 1))
-        num_entropy[0][index] = index + 1    
+        pe = compute_true_movie_rating_posterior_entropies(index + 1)
+        num_entropy[1][index] = np.mean(pe)
+        num_entropy[0][index] = index + 1   
+        #print(pe[0])
     
     """
     num_entropy[1][0] = np.average(compute_true_movie_rating_posterior_entropies(1))

@@ -60,11 +60,17 @@ def forward_backward(observations):
     
     
     print(observations)
+    print("\n###########\n")
     print(all_possible_hidden_states)
+    print("\n###########\n")
     print(all_possible_observed_states)
+    print("\n###########\n")
     print(prior_distribution)
+    print("\n###########\n")
     print(transition_model)
+    print("\n###########\n")
     print(observation_model)
+    print("\n###########\n")
     
     #
 

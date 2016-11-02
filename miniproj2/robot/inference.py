@@ -119,17 +119,26 @@ def forward_backward(observations):
             
             step1 = zk1 * xk             
             
+            """
             total = np.array([0] * 440)
             for j, val in enumerate(step1):
-                if val != 0:
-                    total = val * A[j] + total
+                total = val * A[j] + total
+                #print([(all_possible_hidden_states[i], m) for i, m in enumerate(total) if m != 0])
+            """     
             
-            forward_messages[i] = total
+            forward_messages[i] = np.matmul(xk, A)
         
             if i == 1:
-                print(len(zk1))
-                print(len(xk)) 
-                print(forward_messages[i][:10])
+                print("\n###########\n")
+                print([(all_possible_hidden_states[i], m) for i, m in enumerate(B[:,0]) if m != 0])
+                print("\n###########\n")
+                print([(all_possible_hidden_states[i], m) for i, m in enumerate(zk1) if m != 0])
+                print("\n###########\n")                
+                print([(all_possible_hidden_states[i], m) for i, m in enumerate(xk) if m != 0])
+                print("\n###########\n")
+                print([(all_possible_hidden_states[i], m) for i, m in enumerate(step1) if m != 0])
+                print("\n###########\n")
+                #print(forward_messages[i][:10])
             
             """
             zk1 = forward_messages[i - 1]

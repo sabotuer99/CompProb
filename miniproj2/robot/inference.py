@@ -59,18 +59,18 @@ def forward_backward(observations):
     # YOUR CODE GOES HERE
     
     
-    print(observations)
-    print("\n###########\n")
-    print(all_possible_hidden_states)
-    print("\n###########\n")
-    print(all_possible_observed_states)
+    #print(observations)
+    #print("\n###########\n")
+    #print(all_possible_hidden_states)
+    #print("\n###########\n")
+    #print(all_possible_observed_states)
     print("\n###########\n")
     print(prior_distribution)
     print("\n###########\n")
-    print(transition_model)
-    print("\n###########\n")
-    print(observation_model)
-    print("\n###########\n")
+    #print(transition_model)
+    #print("\n###########\n")
+    #print(observation_model)
+    #print("\n###########\n")
     
     #
 
@@ -78,6 +78,12 @@ def forward_backward(observations):
     forward_messages = [None] * num_time_steps
     forward_messages[0] = [prior_distribution]
     # TODO: Compute the forward messages
+    
+    print(len(all_possible_hidden_states))
+  
+    
+    
+    
 
     backward_messages = [None] * num_time_steps
     # TODO: Compute the backward messages

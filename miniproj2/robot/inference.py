@@ -77,7 +77,7 @@ def forward_backward(observations):
        
     #print(np.log(trans_matrix[:10, :10]), '\n')
     #print(np.log(obs_matrix[:10, :10]), '\n')
-    
+    """
     #print(observations)
     print("\n###########\n")
     #print(all_possible_hidden_states[:10])
@@ -91,25 +91,47 @@ def forward_backward(observations):
     print(all_possible_hidden_states[13])
     print(observation_model(all_possible_hidden_states[13]))
     print("\n###########\n")
-    
+    """
     #
 
     num_time_steps = len(observations)
     forward_messages = [None] * num_time_steps
     
     # TODO: Compute the forward messages
-    
+    #print(prior_distribution)
     #print(len(all_possible_hidden_states))
   
-    tm = trans_matrix
-    om = obs_matrix
-    prior = np.array([1 if k in prior_distribution else 0.0 
-                    for k in all_possible_hidden_states]) / len(prior_distribution) 
+    A = trans_matrix
+    B = obs_matrix
+    prior = np.array([prior_distribution[k] if k in prior_distribution else 0.0 
+                    for k in all_possible_hidden_states])     
+    
+    print(prior)    
     
     for i, obs in enumerate(observations):
         if i == 0:
-            forward_messages[i] = prior.reshape(440,1)
+            forward_messages[i] = prior
         else:
+            zk1 = forward_messages[i - 1]
+            
+            obs_index = all_possible_observed_states.index(obs)
+            xk = B[:,obs_index]            
+            
+            step1 = zk1 * xk             
+            
+            total = np.array([0] * 440)
+            for j, val in enumerate(step1):
+                if val != 0:
+                    total = val * A[j] + total
+            
+            forward_messages[i] = total
+        
+            if i == 1:
+                print(len(zk1))
+                print(len(xk)) 
+                print(forward_messages[i][:10])
+            
+            """
             zk1 = forward_messages[i - 1]
             
             obs_index = all_possible_observed_states.index(obs)
@@ -119,13 +141,15 @@ def forward_backward(observations):
             
             forward_messages[i] = (blarg * zk1).sum(axis=1)           
             
-            """if i == 1:
+            if i == 1:
                 #print(test)
                 print(obs)
                 print(xk[:10])
                 print(len(xk))
-                print(blarg[:10])"""
+                print(blarg[:10])
+            """
       
+    
     #debug      
     msgno = 2
     msg = forward_messages[msgno]

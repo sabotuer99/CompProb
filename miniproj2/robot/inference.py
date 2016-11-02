@@ -57,20 +57,39 @@ def forward_backward(observations):
 
     # -------------------------------------------------------------------------
     # YOUR CODE GOES HERE
+
+    np.set_printoptions(precision=3, linewidth=200) 
+
+    trans_matrix = np.array([[0.0] * 440] * 440)
+    obs_matrix = np.array([[0.0] * 96] * 440)    
     
+    #populate trans_matrix
+    for i, hidden_state in enumerate(all_possible_hidden_states):
+        transitions = transition_model(hidden_state)
+        trans_matrix[i] = np.array([transitions[k] if k in 
+            transitions else 0.0 for k in all_possible_hidden_states])
+    
+    #populate obs_matrix
+    for i, hidden_state in enumerate(all_possible_hidden_states):             
+        observations = observation_model(hidden_state)
+        obs_matrix[i] = np.array([observations[k] if k in 
+            observations else 0.0 for k in all_possible_observed_states])
+       
+    print(trans_matrix[:10, :10], '\n')
+    print(obs_matrix[:10, :10], '\n')
     
     #print(observations)
-    #print("\n###########\n")
-    #print(all_possible_hidden_states)
-    #print("\n###########\n")
-    #print(all_possible_observed_states)
     print("\n###########\n")
-    print(prior_distribution)
+    #print(all_possible_hidden_states[:10])
+    #print("\n###########\n")
+    print(all_possible_observed_states[:10])
+    #print("\n###########\n")
+    #print(prior_distribution)
     print("\n###########\n")
-    #print(transition_model)
-    #print("\n###########\n")
-    #print(observation_model)
-    #print("\n###########\n")
+    print(transition_model(all_possible_hidden_states[13]))
+    print("\n###########\n")
+    print(observation_model(all_possible_hidden_states[13]))
+    print("\n###########\n")
     
     #
 

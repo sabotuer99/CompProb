@@ -71,23 +71,24 @@ def forward_backward(observations):
     
     #populate obs_matrix
     for i, hidden_state in enumerate(all_possible_hidden_states):             
-        observations = observation_model(hidden_state)
-        obs_matrix[i] = np.array([observations[k] if k in 
-            observations else 0.0 for k in all_possible_observed_states])
+        obs = observation_model(hidden_state)
+        obs_matrix[i] = np.array([obs[k] if k in 
+            obs else 0.0 for k in all_possible_observed_states])
        
-    print(trans_matrix[:10, :10], '\n')
-    print(obs_matrix[:10, :10], '\n')
+    #print(np.log(trans_matrix[:10, :10]), '\n')
+    #print(np.log(obs_matrix[:10, :10]), '\n')
     
     #print(observations)
     print("\n###########\n")
     #print(all_possible_hidden_states[:10])
     #print("\n###########\n")
-    print(all_possible_observed_states[:10])
+    print(len(prior_distribution))
     #print("\n###########\n")
     #print(prior_distribution)
     print("\n###########\n")
     print(transition_model(all_possible_hidden_states[13]))
     print("\n###########\n")
+    print(all_possible_hidden_states[13])
     print(observation_model(all_possible_hidden_states[13]))
     print("\n###########\n")
     
@@ -95,13 +96,43 @@ def forward_backward(observations):
 
     num_time_steps = len(observations)
     forward_messages = [None] * num_time_steps
-    forward_messages[0] = [prior_distribution]
+    
     # TODO: Compute the forward messages
     
-    print(len(all_possible_hidden_states))
+    #print(len(all_possible_hidden_states))
   
+    tm = trans_matrix
+    om = obs_matrix
+    prior = np.array([1 if k in prior_distribution else 0.0 
+                    for k in all_possible_hidden_states]) / len(prior_distribution) 
     
-    
+    for i, obs in enumerate(observations):
+        if i == 0:
+            forward_messages[i] = prior.reshape(440,1)
+        else:
+            zk1 = forward_messages[i - 1]
+            
+            obs_index = all_possible_observed_states.index(obs)
+            xk = om.transpose()[obs_index].reshape(440,1)
+            
+            blarg = tm * xk    
+            
+            forward_messages[i] = (blarg * zk1).sum(axis=1)           
+            
+            """if i == 1:
+                #print(test)
+                print(obs)
+                print(xk[:10])
+                print(len(xk))
+                print(blarg[:10])"""
+      
+    #debug      
+    msgno = 2
+    msg = forward_messages[msgno]
+    norm = msg/msg.sum()
+    print('Normalizing factor forward = {} for message {}'.format(msg.sum(), msgno))
+    print([(i, m) for i, m in enumerate(norm) if m != 0][:4])
+    print([(all_possible_hidden_states[i], m) for i, m in enumerate(norm) if m != 0][:4], '\n\n')
     
 
     backward_messages = [None] * num_time_steps

@@ -18,6 +18,7 @@ import robot
 #     Distribution for the next state
 # - observation_model: a function that takes a hidden state and returns a
 #     Distribution for the observation from that hidden state
+
 all_possible_hidden_states = robot.get_all_hidden_states()
 all_possible_observed_states = robot.get_all_observed_states()
 prior_distribution = robot.initial_distribution()
@@ -63,21 +64,26 @@ def forward_backward(observations):
     trans_matrix = np.array([[0.0] * 440] * 440)
     obs_matrix = np.array([[0.0] * 96] * 440)    
     
+    num_states = len(all_possible_hidden_states)
+    
     #populate trans_matrix
-    for i, hidden_state in enumerate(all_possible_hidden_states):
+    for i in range(num_states):
+        hidden_state = all_possible_hidden_states[i]
         transitions = transition_model(hidden_state)
         trans_matrix[i] = np.array([transitions[k] if k in 
             transitions else 0.0 for k in all_possible_hidden_states])
-    
+  
     #populate obs_matrix
-    for i, hidden_state in enumerate(all_possible_hidden_states):             
+    for i in range(num_states):
+        hidden_state = all_possible_hidden_states[i]             
         obs = observation_model(hidden_state)
         obs_matrix[i] = np.array([obs[k] if k in 
             obs else 0.0 for k in all_possible_observed_states])
        
-    #print(np.log(trans_matrix[:10, :10]), '\n')
-    #print(np.log(obs_matrix[:10, :10]), '\n')
     """
+    print(trans_matrix[:10, :10], '\n')
+    print(obs_matrix[:10, :10], '\n')
+    
     #print(observations)
     print("\n###########\n")
     #print(all_possible_hidden_states[:10])
@@ -94,79 +100,56 @@ def forward_backward(observations):
     """
     #
 
-    num_time_steps = len(observations)
-    forward_messages = [None] * num_time_steps
+    
     
     # TODO: Compute the forward messages
     #print(prior_distribution)
     #print(len(all_possible_hidden_states))
-  
+    
     A = trans_matrix
     B = obs_matrix
     prior = np.array([prior_distribution[k] if k in prior_distribution else 0.0 
-                    for k in all_possible_hidden_states])     
+                    for k in all_possible_hidden_states])   
+    states = all_possible_observed_states
+    """
     
-    print(prior)    
+    A = np.array([[0.25, 0.75, 0],[0, 0.25, 0.75],[0,0,1.0]])                    
+    B = np.array([[1.0,0],[0,1.0],[1.0,0]])
+    prior = np.array([1.0/3] * 3) 
+    states = ["hot", "cold"] 
+    observations = ["hot", "cold", "hot"]   
+    """
+    num_time_steps = len(observations)
+    forward_messages = [None] * num_time_steps
     
-    for i, obs in enumerate(observations):
-        if i == 0:
-            forward_messages[i] = prior
-        else:
-            zk1 = forward_messages[i - 1]
-            
-            obs_index = all_possible_observed_states.index(obs)
-            xk = B[:,obs_index]            
-            
-            step1 = zk1 * xk             
-            
-            """
-            total = np.array([0] * 440)
-            for j, val in enumerate(step1):
-                total = val * A[j] + total
-                #print([(all_possible_hidden_states[i], m) for i, m in enumerate(total) if m != 0])
-            """     
-            
-            forward_messages[i] = np.matmul(xk, A)
+    
+    for i in range(num_time_steps):
+      if i == 0:
+        prev_message = prior
+      else:
+        prev_message = forward_messages[i - 1]
         
-            if i == 1:
-                print("\n###########\n")
-                print([(all_possible_hidden_states[i], m) for i, m in enumerate(B[:,0]) if m != 0])
-                print("\n###########\n")
-                print([(all_possible_hidden_states[i], m) for i, m in enumerate(zk1) if m != 0])
-                print("\n###########\n")                
-                print([(all_possible_hidden_states[i], m) for i, m in enumerate(xk) if m != 0])
-                print("\n###########\n")
-                print([(all_possible_hidden_states[i], m) for i, m in enumerate(step1) if m != 0])
-                print("\n###########\n")
-                #print(forward_messages[i][:10])
-            
-            """
-            zk1 = forward_messages[i - 1]
-            
-            obs_index = all_possible_observed_states.index(obs)
-            xk = om.transpose()[obs_index].reshape(440,1)
-            
-            blarg = tm * xk    
-            
-            forward_messages[i] = (blarg * zk1).sum(axis=1)           
-            
-            if i == 1:
-                #print(test)
-                print(obs)
-                print(xk[:10])
-                print(len(xk))
-                print(blarg[:10])
-            """
+      obs = observations[i]
       
-    
-    #debug      
-    msgno = 2
+      obs_index = states.index(obs)
+      xk = B[:,obs_index]            
+      
+      step1 = prev_message * xk                 
+      
+      unnormal = np.matmul(step1, A) 
+      forward_messages[i] = unnormal / np.sum(unnormal)
+
+      
+    #print(forward_messages)
+    #debug
+         
+    msgno = 1
     msg = forward_messages[msgno]
     norm = msg/msg.sum()
     print('Normalizing factor forward = {} for message {}'.format(msg.sum(), msgno))
     print([(i, m) for i, m in enumerate(norm) if m != 0][:4])
     print([(all_possible_hidden_states[i], m) for i, m in enumerate(norm) if m != 0][:4], '\n\n')
-    
+  
 
     backward_messages = [None] * num_time_steps
     # TODO: Compute the backward messages

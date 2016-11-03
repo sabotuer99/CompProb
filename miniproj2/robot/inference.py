@@ -273,9 +273,14 @@ def run_viterbi(A, B, prior, all_hstates, all_obs, observations):
     back_pointers = np.array([[None] * len(all_hstates)] * (len(observations) + 1))
     
     for i, obs in enumerate(observations):
-        obs_i = all_obs.index(obs)    
+        if obs != None:
+            obs_i = all_obs.index(obs)  
+            em = log_b[:,obs_i]
+        else:
+            em = np.log2(np.ones(len(all_hstates)))            
+            
         for j, state in enumerate(all_hstates):
-           blarg = messages[i] + log_a.transpose()[j] + log_b[:,obs_i]
+           blarg = messages[i] + log_a.transpose()[j] + em              
            messages[i+1][j] = np.max(blarg) 
            back_pointers[i+1][j] = np.argmax(blarg)
     
@@ -307,10 +312,7 @@ def second_best(observations):
     #
 
 
-    num_time_steps = len(observations)
-    estimated_hidden_states = [None] * num_time_steps # remove this
-
-    return estimated_hidden_states
+    return [(0,0,"stay")] * len(observations)
 
 
 # -----------------------------------------------------------------------------

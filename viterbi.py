@@ -31,7 +31,7 @@ back_pointers = np.array([[None] * len(all_hstates)] * (len(observations) + 1))
 for i, obs in enumerate(observations):
     obs_i = all_obs.index(obs)    
     for j, state in enumerate(all_hstates):
-       blarg = messages[i] + log_a[j] + log_b[:,obs_i]
+       blarg = messages[i] + log_a.transpose()[j] + log_b[:,obs_i]
        messages[i+1][j] = np.max(blarg) 
        back_pointers[i+1][j] = np.argmax(blarg)
 """        

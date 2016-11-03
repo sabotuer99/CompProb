@@ -7,7 +7,7 @@ Created on Thu Nov  3 12:23:52 2016
 import numpy as np
 
 observations = ["H", "H", "T", "T", "T"]
-all_hstates = ["fair", "biased"]
+all_hstates = ["fair", "bias"]
 all_obs = ["H", "T"]
 prior = np.array([0.5, 0.5])
 A = np.array([[0.75, 0.25],
@@ -24,11 +24,20 @@ log_b = np.log2(B)
 print(log_a)
 print(log_b)
 
-m_12_fair = np.max(log_prior + log_a[0] + log_b[:,0])
-m_12_bias = np.max(log_prior + log_a[1] + log_b[:,1])
+obs = observations[0]
+m_12_fair = np.max(log_prior + 
+                   log_a[all_hstates.index("fair")] + 
+                   log_b[:,all_obs.index(obs)])
+m_12_bias = np.max(log_prior + 
+                   log_a[all_hstates.index("bias")] + 
+                   log_b[:,all_obs.index(obs)])
 m_12 = [m_12_fair, m_12_bias]
-m_12_fair_argmax = np.argmax(log_prior + log_a[0] + log_b[:,0])
-m_12_bias_argmax = np.argmax(log_prior + log_a[1] + log_b[:,1])
+m_12_fair_argmax = np.argmax(log_prior + 
+                             log_a[all_hstates.index("fair")] + 
+                             log_b[:,all_obs.index(obs)])
+m_12_bias_argmax = np.argmax(log_prior + 
+                             log_a[all_hstates.index("bias")] + 
+                             log_b[:,all_obs.index(obs)])
 tail_12 = [m_12_fair_argmax, m_12_bias_argmax]
 print(m_12)
 print(tail_12)

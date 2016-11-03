@@ -231,12 +231,62 @@ def Viterbi(observations):
     # -------------------------------------------------------------------------
     # YOUR CODE GOES HERE
     #
+    np.set_printoptions(precision=3, linewidth=200) 
 
+    A = np.array([[0.0] * 440] * 440)
+    B = np.array([[0.0] * 96] * 440)    
+    
+    num_states = len(all_possible_hidden_states)
+    
+    #populate trans_matrix
+    for i in range(num_states):
+        hidden_state = all_possible_hidden_states[i]
+        transitions = transition_model(hidden_state)
+        A[i] = np.array([transitions[k] if k in 
+            transitions else 0.0 for k in all_possible_hidden_states])
+  
+    #populate obs_matrix
+    for i in range(num_states):
+        hidden_state = all_possible_hidden_states[i]             
+        obs = observation_model(hidden_state)
+        B[i] = np.array([obs[k] if k in 
+            obs else 0.0 for k in all_possible_observed_states])
 
-    num_time_steps = len(observations)
-    estimated_hidden_states = [None] * num_time_steps # remove this
+    #calculate prior distribution
+    prior = np.array([prior_distribution[k] if k in prior_distribution else 0.0 
+                    for k in all_possible_hidden_states])  
+
+    estimated_hidden_states = run_viterbi(A, B, prior, 
+                                          all_possible_hidden_states,
+                                          all_possible_observed_states,
+                                          observations)
 
     return estimated_hidden_states
+
+def run_viterbi(A, B, prior, all_hstates, all_obs, observations):
+    log_prior = np.log2(prior)
+    log_a = np.log2(A)
+    log_b = np.log2(B)
+    
+    messages = np.array([[None] * len(all_hstates)] * (len(observations) + 1))
+    messages[0] = log_prior
+    back_pointers = np.array([[None] * len(all_hstates)] * (len(observations) + 1))
+    
+    for i, obs in enumerate(observations):
+        obs_i = all_obs.index(obs)    
+        for j, state in enumerate(all_hstates):
+           blarg = messages[i] + log_a.transpose()[j] + log_b[:,obs_i]
+           messages[i+1][j] = np.max(blarg) 
+           back_pointers[i+1][j] = np.argmax(blarg)
+    
+    response = [None] * len(observations)
+    most_likely = np.argmax(messages[-1])
+    for i in range(len(back_pointers)-1, 0, -1):
+        index = back_pointers[i][most_likely]
+        most_likely = index
+        response[i-1] = all_hstates[index]
+        
+    return response    
 
 
 def second_best(observations):

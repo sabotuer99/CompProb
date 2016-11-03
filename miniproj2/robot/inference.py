@@ -128,8 +128,11 @@ def forward_backward(observations):
         
       obs = observations[i]
       
-      obs_index = states.index(obs)
-      xk = B[:,obs_index]            
+      if obs != None:
+          obs_index = states.index(obs)
+          xk = B[:,obs_index]   
+      else:
+          xk = np.ones(len(all_possible_hidden_states))
       
       step1 = prev_message * xk                 
       
@@ -159,8 +162,11 @@ def forward_backward(observations):
         
       obs = observations[i]
       
-      obs_index = states.index(obs)
-      xk = B[:,obs_index]            
+      if obs != None:
+          obs_index = states.index(obs)
+          xk = B[:,obs_index]    
+      else:
+          xk = np.ones(len(all_possible_hidden_states))
       
       step1 = prev_message * xk                 
       
@@ -184,12 +190,19 @@ def forward_backward(observations):
     marginals = [None] * num_time_steps
     #marginals = np.array([[0] * len(all_possible_hidden_states)] * num_time_steps)
     for i, obs in enumerate(observations):
-      x_i = states.index(obs)
+      
+      if obs != None:
+          x_i = states.index(obs)
+          em = B[:, x_i]
+      else:
+          em = np.ones(len(all_possible_hidden_states))
+      
+      
       """"print(x_i)
       print(forward_messages[i])
       print(backward_messages[i])
       print(B[:, x_i])"""
-      marginal = forward_messages[i] * backward_messages[i + 1] * B[:, x_i]  
+      marginal = forward_messages[i] * backward_messages[i + 1] * em  
       
       dist = robot.Distribution()
       for j, hstate in enumerate(all_possible_hidden_states):

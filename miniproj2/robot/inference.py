@@ -152,7 +152,34 @@ def forward_backward(observations):
   
 
     backward_messages = [None] * num_time_steps
+    terminal = np.ones(len(all_possible_hidden_states))
     # TODO: Compute the backward messages
+    for i in range(num_time_steps - 1, 0, -1):
+      if i == num_time_steps - 1:
+        prev_message = terminal
+      else:
+        prev_message = backward_messages[i + 1]
+        
+      obs = observations[i]
+      
+      obs_index = states.index(obs)
+      xk = B[:,obs_index]            
+      
+      step1 = prev_message * xk                 
+      
+      unnormal = np.matmul(step1, A.transpose()) 
+      backward_messages[i] = unnormal / np.sum(unnormal)    
+    
+    msgno = 98
+    msg = backward_messages[msgno]
+    norm = msg/msg.sum()
+    print('Normalizing factor forward = {} for message {}'.format(msg.sum(), msgno))
+    print([(i, m) for i, m in enumerate(norm) if m != 0][:4])
+    print([(all_possible_hidden_states[i], m) for i, m in enumerate(norm) if m != 0][:4], '\n\n')
+ 
+    print("message length sanity check")
+    print(len(forward_messages))
+    print(len(backward_messages))
 
     marginals = [None] * num_time_steps # remove this
     # TODO: Compute the marginals 

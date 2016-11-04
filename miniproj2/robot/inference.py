@@ -310,10 +310,97 @@ def second_best(observations):
     # -------------------------------------------------------------------------
     # YOUR CODE GOES HERE
     #
+    np.set_printoptions(precision=3, linewidth=200) 
 
+    A = np.array([[0.0] * 440] * 440)
+    B = np.array([[0.0] * 96] * 440)    
+    
+    num_states = len(all_possible_hidden_states)
+    
+    #populate trans_matrix
+    for i in range(num_states):
+        hidden_state = all_possible_hidden_states[i]
+        transitions = transition_model(hidden_state)
+        A[i] = np.array([transitions[k] if k in 
+            transitions else 0.0 for k in all_possible_hidden_states])
+  
+    #populate obs_matrix
+    for i in range(num_states):
+        hidden_state = all_possible_hidden_states[i]             
+        obs = observation_model(hidden_state)
+        B[i] = np.array([obs[k] if k in 
+            obs else 0.0 for k in all_possible_observed_states])
 
-    return [(0,0,"stay")] * len(observations)
+    #calculate prior distribution
+    prior = np.array([prior_distribution[k] if k in prior_distribution else 0.0 
+                    for k in all_possible_hidden_states])  
 
+    estimated_hidden_states = run_viterbi2(A, B, prior, 
+                                          all_possible_hidden_states,
+                                          all_possible_observed_states,
+                                          observations)
+
+    return estimated_hidden_states
+
+def run_viterbi2(A, B, prior, all_hstates, all_obs, observations):
+    log_prior = np.log2(prior)
+    log_a = np.log2(A)
+    log_b = np.log2(B)
+    
+    messages = np.array([[[None] * len(all_hstates)] * (len(observations) + 1)]*2)
+    messages[0][0] = log_prior
+    messages[1][0] = log_prior
+    back_pointers = np.array([[[None] * len(all_hstates)] * (len(observations) + 1)]*2)
+    
+    best_second = 9999999    
+    
+    for i, obs in enumerate(observations):
+        if obs != None:
+            obs_i = all_obs.index(obs)  
+            em = log_b[:,obs_i]
+        else:
+            em = np.log2(np.ones(len(all_hstates)))            
+            
+        for j, state in enumerate(all_hstates):
+           first = messages[0][i] + log_a.transpose()[j] + em
+           second = messages[1][i] + log_a.transpose()[j] + em
+           
+           indicies = np.argsort(first)
+           
+           first_val = first[indicies[-1]]
+           second_val = second[indicies[-2]]
+           
+           diff = first_val - second_val
+           
+           if diff > 0 and diff < best_second:
+               print("Previous best: " + str(best_second))
+               print("New best: " + str(diff))
+               
+               best_second = diff
+               messages[1][0:i+1] = messages[0][0:i+1]
+               back_pointers[1][0:i+1] = back_pointers[0][0:i+1]
+           
+               messages[0][i+1][j] = first_val
+               messages[1][i+1][j] = second_val
+           
+               back_pointers[0][i+1][j] = indicies[-1]
+               back_pointers[1][i+1][j] = indicies[-2]
+           else:
+               messages[0][i+1][j] = first_val
+               messages[1][i+1][j] = np.max(second)
+           
+               back_pointers[0][i+1][j] = indicies[-1]
+               back_pointers[1][i+1][j] = np.argmax(second)
+        
+    
+    response = [None] * len(observations)
+    most_likely = np.argmax(messages[1][-1])
+    for i in range(len(back_pointers[1])-1, 0, -1):
+        index = back_pointers[1][i][most_likely]
+        most_likely = index
+        response[i-1] = all_hstates[index]
+        
+    return response
 
 # -----------------------------------------------------------------------------
 # Generating data from the hidden Markov model

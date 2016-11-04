@@ -373,12 +373,12 @@ def run_viterbi2(A, B, prior, all_hstates, all_obs, observations):
            diff = first_val - second_val
            
            if diff > 0 and diff < best_second:
-               print("Previous best: " + str(best_second))
-               print("New best: " + str(diff))
+               #print("Previous best: " + str(best_second))
+               #print("New best: " + str(diff))
                
                best_second = diff
-               messages[1][0:i+1] = messages[0][0:i+1]
-               back_pointers[1][0:i+1] = back_pointers[0][0:i+1]
+               messages[1][:] = messages[0][:]
+               back_pointers[1][:] = back_pointers[0][:]
            
                messages[0][i+1][j] = first_val
                messages[1][i+1][j] = second_val

@@ -347,13 +347,11 @@ def run_viterbi2(A, B, prior, all_hstates, all_obs, observations):
     log_a = np.log2(A)
     log_b = np.log2(B)
     
-    messages = np.array([[[None] * len(all_hstates)] * (len(observations) + 1)]*2)
-    messages[0][0] = log_prior
-    messages[1][0] = log_prior
-    back_pointers = np.array([[[None] * len(all_hstates)] * (len(observations) + 1)]*2)
-    
-    best_seconds = [[float("inf")] * len(all_hstates)] * (len(observations) + 1)
-    best_seconds_i = [[float("inf")] * len(all_hstates)] * (len(observations) + 1) 
+    messages = np.array([[None] * len(all_hstates)] * (len(observations) + 1))
+    messages[0] = log_prior
+    back_pointers = np.array([[None] * len(all_hstates)] * (len(observations) + 1))
+    seconds = np.array([[None] * len(all_hstates)] * (len(observations) + 1))    
+    seconds_i = np.array([[None] * len(all_hstates)] * (len(observations) + 1))
     
     for i, obs in enumerate(observations):
         if obs != None:
@@ -363,67 +361,46 @@ def run_viterbi2(A, B, prior, all_hstates, all_obs, observations):
             em = np.log2(np.ones(len(all_hstates)))            
             
         for j, state in enumerate(all_hstates):
-           first = messages[0][i] + log_a.transpose()[j] + em
-           #second = messages[1][i] + log_a.transpose()[j] + em
-           
-           indicies = np.argsort(first)
-           
-           first_val = first[indicies[-1]]
-           second_val = first[indicies[-2]]
-           
-           diff = first_val - second_val
-           best_seconds[i + 1][j] = diff
-           best_seconds_i[i + 1][j] = indicies[-2]
-           """
-           if diff > 0 and diff < best_second_on_path:
-               
-               messages[1][:] = messages[0][:]
-               #back_pointers[1][:] = back_pointers[0][:]
-           
-               messages[0][i+1][j] = first_val
-               messages[1][i+1][j] = second_val
-           
-               back_pointers[0][i+1][j] = indicies[-1]
-               back_pointers[1][i+1][j] = indicies[-2]
-           else:
-           """
-           messages[0][i+1][j] = first_val
-           #messages[1][i+1][j] = np.max(second)
-       
-           back_pointers[0][i+1][j] = indicies[-1]
-           #back_pointers[1][i+1][j] = np.argmax(second)
+           blarg = messages[i] + log_a.transpose()[j] + em              
+           messages[i+1][j] = np.max(blarg) 
+           back_pointers[i+1][j] = np.argmax(blarg)
+           second_i = np.argsort(blarg)[-2]
+           second = blarg[second_i]
+           seconds[i+1][j] = second
+           seconds_i[i+1][j] = second_i
     
-    print([(all_hstates[i], messages[0][-1][i]) for i in np.argsort(messages[0][-1])][-5:-1])    
+    #find observation with best second-best path, working backward from best path    
+    most_likely = np.argmax(messages[-1])    
+    inflection = len(back_pointers)
+    best_second_i = 0
+    best_second = float("inf")
     
-    most_likely = np.argmax(messages[0][-1])    
+    for i in range(len(back_pointers)-1, 0, -1):
+        index = back_pointers[i][most_likely]
+        most_likely = index
+        next_second_i = seconds_i[i][most_likely]
+        next_second = seconds[i][most_likely]
+        
+        diff = messages[i][index] - next_second
+        if diff > 0 and (diff < best_second):
+          print(str(i) + ": " + str(messages[i][index]) + ", " + str(next_second) + " : " + str(diff))
+          best_second = diff
+          best_second_i = next_second_i
+          inflection = i
     
-    inflection = len(observations) #last element
-    best_second_i = best_seconds_i[-1][most_likely]
-    best_second = best_seconds[-1][most_likely]
-    next_step = most_likely
-    for i in range(len(back_pointers[0])-1, 0, -1):
-      index = back_pointers[0][i][next_step]
-      next_step = index
-      next_second_i = best_seconds_i[i][next_step]
-      next_second = best_seconds[i][next_step]
-      if next_second < best_second:
-        print("New best second @" + str(i) +": " + str(next_second))
-        best_second_i = next_second_i
-        best_second = next_second
-        inflection = i
     
     response = [None] * len(observations)
-        
-    for i in range(len(back_pointers[0])-1, 0, -1):
+    most_likely = np.argmax(messages[-1])
+    for i in range(len(back_pointers)-1, 0, -1):
       if i == inflection:
         index = best_second_i
       else:
-        index = back_pointers[0][i][most_likely]
+        index = back_pointers[i][most_likely]
         
       most_likely = index
       response[i-1] = all_hstates[index]
         
-    return response
+    return response 
 
 # -----------------------------------------------------------------------------
 # Generating data from the hidden Markov model

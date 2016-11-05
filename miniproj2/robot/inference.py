@@ -352,7 +352,8 @@ def run_viterbi2(A, B, prior, all_hstates, all_obs, observations):
     messages[1][0] = log_prior
     back_pointers = np.array([[[None] * len(all_hstates)] * (len(observations) + 1)]*2)
     
-    best_second = 9999999    
+    best_seconds = [[float("inf")] * len(all_hstates)] * (len(observations) + 1)
+    best_seconds_i = [[float("inf")] * len(all_hstates)] * (len(observations) + 1) 
     
     for i, obs in enumerate(observations):
         if obs != None:
@@ -363,22 +364,21 @@ def run_viterbi2(A, B, prior, all_hstates, all_obs, observations):
             
         for j, state in enumerate(all_hstates):
            first = messages[0][i] + log_a.transpose()[j] + em
-           second = messages[1][i] + log_a.transpose()[j] + em
+           #second = messages[1][i] + log_a.transpose()[j] + em
            
            indicies = np.argsort(first)
            
            first_val = first[indicies[-1]]
-           second_val = second[indicies[-2]]
+           second_val = first[indicies[-2]]
            
            diff = first_val - second_val
-           
-           if diff > 0 and diff < best_second:
-               #print("Previous best: " + str(best_second))
-               #print("New best: " + str(diff))
+           best_seconds[i + 1][j] = diff
+           best_seconds_i[i + 1][j] = indicies[-2]
+           """
+           if diff > 0 and diff < best_second_on_path:
                
-               best_second = diff
                messages[1][:] = messages[0][:]
-               back_pointers[1][:] = back_pointers[0][:]
+               #back_pointers[1][:] = back_pointers[0][:]
            
                messages[0][i+1][j] = first_val
                messages[1][i+1][j] = second_val
@@ -386,19 +386,42 @@ def run_viterbi2(A, B, prior, all_hstates, all_obs, observations):
                back_pointers[0][i+1][j] = indicies[-1]
                back_pointers[1][i+1][j] = indicies[-2]
            else:
-               messages[0][i+1][j] = first_val
-               messages[1][i+1][j] = np.max(second)
-           
-               back_pointers[0][i+1][j] = indicies[-1]
-               back_pointers[1][i+1][j] = np.argmax(second)
-        
+           """
+           messages[0][i+1][j] = first_val
+           #messages[1][i+1][j] = np.max(second)
+       
+           back_pointers[0][i+1][j] = indicies[-1]
+           #back_pointers[1][i+1][j] = np.argmax(second)
+    
+    print([(all_hstates[i], messages[0][-1][i]) for i in np.argsort(messages[0][-1])][-5:-1])    
+    
+    most_likely = np.argmax(messages[0][-1])    
+    
+    inflection = len(observations) #last element
+    best_second_i = best_seconds_i[-1][most_likely]
+    best_second = best_seconds[-1][most_likely]
+    next_step = most_likely
+    for i in range(len(back_pointers[0])-1, 0, -1):
+      index = back_pointers[0][i][next_step]
+      next_step = index
+      next_second_i = best_seconds_i[i][next_step]
+      next_second = best_seconds[i][next_step]
+      if next_second < best_second:
+        print("New best second @" + str(i) +": " + str(next_second))
+        best_second_i = next_second_i
+        best_second = next_second
+        inflection = i
     
     response = [None] * len(observations)
-    most_likely = np.argmax(messages[1][-1])
-    for i in range(len(back_pointers[1])-1, 0, -1):
-        index = back_pointers[1][i][most_likely]
-        most_likely = index
-        response[i-1] = all_hstates[index]
+        
+    for i in range(len(back_pointers[0])-1, 0, -1):
+      if i == inflection:
+        index = best_second_i
+      else:
+        index = back_pointers[0][i][most_likely]
+        
+      most_likely = index
+      response[i-1] = all_hstates[index]
         
     return response
 

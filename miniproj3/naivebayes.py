@@ -1,7 +1,7 @@
 import sys
 import os.path
 import numpy as np
-from math import log
+from math import log, exp
 from collections import Counter, defaultdict
 
 import util
@@ -119,7 +119,12 @@ def classify_email(email_filename,
     One of the labels in names.
     """
     ### TODO: Comment out the following line and write your code here
-    words = util.get_words_in_file(email_filename)  
+    email_words = util.get_words_in_file(email_filename)  
+    test_words = set([])
+    
+    for list in log_probabilities_by_category:
+      for word in list:
+        test_words.add(word)
     
     spam = log_prior_by_category[0]
     ham = log_prior_by_category[1]
@@ -127,9 +132,17 @@ def classify_email(email_filename,
     print("spam prior:" + str(spam))
     print("ham prior:" + str(ham) + "\n")    
     
-    for word in words:
-        spam += log_probabilities_by_category[0][word]
-        ham += log_probabilities_by_category[1][word]
+    spam_data = log_probabilities_by_category[0]    
+    ham_data = log_probabilities_by_category[1] 
+    
+    for word in test_words:
+      if word in email_words:
+        spam += spam_data[word]
+        ham += ham_data[word]
+      else:
+        spam += log(1 - exp(spam_data[word]))
+        ham += log(1 - exp(ham_data[word]))
+    
     
     print("spam:" + str(spam))
     print("ham:" + str(ham) + "\n\n\n")

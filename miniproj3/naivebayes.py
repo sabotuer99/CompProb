@@ -129,8 +129,8 @@ def classify_email(email_filename,
     spam = log_prior_by_category[0]
     ham = log_prior_by_category[1]
     
-    print("spam prior:" + str(spam))
-    print("ham prior:" + str(ham) + "\n")    
+    #print("spam prior:" + str(spam))
+    #print("ham prior:" + str(ham) + "\n")    
     
     spam_data = log_probabilities_by_category[0]    
     ham_data = log_probabilities_by_category[1] 
@@ -144,8 +144,8 @@ def classify_email(email_filename,
         ham += log(1 - exp(ham_data[word]))
     
     
-    print("spam:" + str(spam))
-    print("ham:" + str(ham) + "\n\n\n")
+    #print("spam:" + str(spam))
+    #print("ham:" + str(ham) + "\n\n\n")
     
     
     if spam > ham:

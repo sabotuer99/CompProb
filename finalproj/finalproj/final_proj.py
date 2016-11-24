@@ -343,9 +343,31 @@ def learn_tree_parameters(observations, tree, root_node=0):
     # YOUR CODE HERE
     #
 
+    #calculate root node potential
+    #root_potential = compute_empirical_distribution(observations[:,root_node])
+    
+    for node in nodes:
+      if node == root_node:
+        node_potentials[node] = compute_empirical_distribution(observations[:,node])
+      else:
+        keys = compute_empirical_distribution(observations[:,node]).keys()
+        node_potentials[node] = {key: 1 for key in keys}
+        
+    for edge in tree:
+       conditional_prob = compute_empirical_conditional_distribution(
+           observations[:,edge[1]],
+           observations[:,edge[0]])
+           
+       edge_potentials[edge] = conditional_prob
+       edge_potentials[(edge[1], edge[0])] = transpose_2d_table(conditional_prob)
+           
+    #edge_potentials_trans = transpose_2d_table(edge_potentials)
     #
     # END OF YOUR CODE
     # -------------------------------------------------------------------------
+
+    #print("Edge Potentials")
+    #print(edge_potentials)
 
     return node_potentials, edge_potentials
 

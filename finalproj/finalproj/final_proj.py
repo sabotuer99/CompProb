@@ -1,5 +1,6 @@
 import copy
 import numpy as np
+from math import log
 
 
 # DO NOT MODIFY THIS FUNCTION
@@ -108,17 +109,24 @@ def compute_empirical_distribution(values):
     ------
     - distribution: a Python dictionary representing the empirical distribution
     """
-    distribution = {}
+    dist = {}
 
     # -------------------------------------------------------------------------
     # YOUR CODE HERE
     #
-
+    for val in values:
+      if val in dist:
+        dist[val] += 1.0
+      else:
+        dist[val] = 1.0
+    
+    for (key,val) in dist.items():
+      dist[key] = float(val / len(values))
     #
     # END OF YOUR CODE
     # -------------------------------------------------------------------------
 
-    return distribution
+    return dist
 
 
 def compute_empirical_mutual_info_nats(var1_values, var2_values):
@@ -143,6 +151,19 @@ def compute_empirical_mutual_info_nats(var1_values, var2_values):
     #
 
     empirical_mutual_info_nats = 0.0
+    
+    pairs = list(zip(var1_values, var2_values))
+
+    var1_marg = compute_empirical_distribution(var1_values)
+    var2_marg = compute_empirical_distribution(var2_values)
+    joint_dist = compute_empirical_distribution(pairs)
+    
+    print(joint_dist)    
+    
+    for pair in joint_dist:
+      empirical_mutual_info_nats += joint_dist[pair] * log(joint_dist[pair] / 
+                                    (var2_marg[pair[1]] * var1_marg[pair[0]]))
+
 
     #
     # END OF YOUR CODE

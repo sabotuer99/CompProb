@@ -416,6 +416,13 @@ def sum_product(nodes, edges, node_potentials, edge_potentials):
     # -------------------------------------------------------------------------
     # YOUR CODE HERE
     #
+    def calc_down_messages(target_node):
+      for neighbor in nodes[target_node]:
+        ""
+      
+
+
+
 
     #
     # END OF YOUR CODE
@@ -423,6 +430,23 @@ def sum_product(nodes, edges, node_potentials, edge_potentials):
 
     return marginals
 
+def dict_mult(a, b):
+    
+    result = {}
+    for row in a.keys():
+      result[row] = {}
+      for col in b[row].keys():
+        dotp = 0
+        for k in b[row].keys():
+          dotp += a[row][k] * b[k][col]
+        result[row][col] = dotp
+    
+    return result
+        
+        
+        
+        
+        
 
 def test_sum_product1():
     """

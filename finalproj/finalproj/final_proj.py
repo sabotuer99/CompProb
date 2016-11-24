@@ -158,7 +158,7 @@ def compute_empirical_mutual_info_nats(var1_values, var2_values):
     var2_marg = compute_empirical_distribution(var2_values)
     joint_dist = compute_empirical_distribution(pairs)
     
-    print(joint_dist)    
+    #print(joint_dist)    
     
     for pair in joint_dist:
       empirical_mutual_info_nats += joint_dist[pair] * log(joint_dist[pair] / 
@@ -200,7 +200,25 @@ def chow_liu(observations):
     # -------------------------------------------------------------------------
     # YOUR CODE HERE
     #
-
+    #calculate mutual information between all nodes
+    node_count = len(observations[0])
+    MI = {}
+    for i in range(node_count):
+      for j in range(i+1, node_count):
+        MI[(i,j)] = compute_empirical_mutual_info_nats(
+                        observations[:,i], 
+                        observations[:,j])
+    MI = sorted(MI.items(), key=lambda x: x[1], reverse=True)
+    #print(MI)
+    
+    nodes_seen = set([])
+    for item in MI:
+      key = item[0]
+      if(key[0] not in nodes_seen or key[1] not in nodes_seen):
+        nodes_seen.add(key[0])
+        nodes_seen.add(key[1])
+        best_tree.add(key)
+    
     #
     # END OF YOUR CODE
     # -------------------------------------------------------------------------
@@ -232,7 +250,12 @@ def compute_empirical_conditional_distribution(var1_values, var2_values):
     # -------------------------------------------------------------------------
     # YOUR CODE HERE
     #
-
+    for key in conditional_distributions.keys():
+      val1 = []
+      for i in range(len(var2_values)):
+        if(var2_values[i] == key):
+          val1.append(var1_values[i])
+      conditional_distributions[key] = compute_empirical_distribution(val1)
     #
     # END OF YOUR CODE
     # -------------------------------------------------------------------------

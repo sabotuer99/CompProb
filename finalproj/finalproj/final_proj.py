@@ -583,10 +583,10 @@ def test_sum_product1():
            3: {0: 0.16666666666666666, 1: 0.8333333333333334}})
 
     node_potentials = {1: {0: 1, 1: 1}, 2: {0: 1, 1: 1}, 3: {0: 1, 1: 1}}
-    #print(compute_marginals_given_observations(nodes, edges,
-    #                                           node_potentials,
-    #                                           edge_potentials,
-    #                                           observations={1: 0}))
+    print(compute_marginals_given_observations(nodes, edges,
+                                              node_potentials,
+                                               edge_potentials,
+                                               observations={1: 0}))
 
 
 def test_sum_product2():
@@ -656,7 +656,12 @@ def compute_marginals_given_observations(nodes, edges, node_potentials,
     # -------------------------------------------------------------------------
     # YOUR CODE HERE
     #
-    return "doh"
+    for (k,v) in node_potentials.items():
+      if k in observations:
+        observed = observations[k]
+        new_node_potentials[k] = {k: 1 if k == observed else 0 for k in v.keys()}
+      else:
+        new_node_potentials[k] = v
     #
     # END OF YOUR CODE
     # -------------------------------------------------------------------------

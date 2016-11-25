@@ -413,22 +413,80 @@ def sum_product(nodes, edges, node_potentials, edge_potentials):
     marginals = {}
     messages = {}
 
+    print("Node Potentials")
+    print(node_potentials)
+
+    depth = [];
     # -------------------------------------------------------------------------
     # YOUR CODE HERE
     #
     def calc_down_messages(target_node):
-      for neighbor in nodes[target_node]:
-        ""
-      
-
-
-
-
+      depth.append(1)
+      if len(depth) > 10:
+        return
+      for neighbor in edges[target_node]:
+        if (neighbor,target_node) not in messages:       
+          incoming_messages = []
+          for child in [x for x in edges[neighbor] if x > neighbor]:
+            if (child, neighbor) not in messages:
+              calc_down_messages(neighbor)
+            incoming_messages.append(messages[(child, neighbor)])
+          phi = node_potentials[neighbor]
+          psi = edge_potentials[(target_node, neighbor)]
+          inter1 = {k: sum(v.values()) for (k,v) in vect_matr(phi, psi).items()}
+          
+          for m in incoming_messages:
+            inter1 = vect_mult(m, inter1)
+            
+          inter1 = normalize(inter1)
+          
+          messages[(neighbor,target_node)] = inter1
+    
+    for node in nodes:
+      print(node)
+      calc_down_messages(node)
+    print("Messages")
+    print(messages)
     #
     # END OF YOUR CODE
     # -------------------------------------------------------------------------
 
     return marginals
+
+def normalize(a):
+    result = {}
+    z = 0.0
+    for v in a.values():
+      z += v * 1.0
+      
+    for (k,v) in a.items():
+      result[k] = v/z
+      
+    return result
+
+def vect_mult(a,b):
+    result = {}
+    for (k,v) in a.items():
+      result[k] = v * b[k]
+      
+    return result
+
+def vect_add(a,b):
+    result = {}
+    for (k,v) in a.items():
+      result[k] = v + b[k]
+      
+    return result
+
+def vect_matr(a, b):
+    result = {}
+    for row in b.keys():
+      result[row] = {}
+      for col in b[row].keys():
+        result[row][col] = b[row][col] * a[col]
+    
+    return result
+  
 
 def dict_mult(a, b):
     
@@ -473,10 +531,10 @@ def test_sum_product1():
            3: {0: 0.16666666666666666, 1: 0.8333333333333334}})
 
     node_potentials = {1: {0: 1, 1: 1}, 2: {0: 1, 1: 1}, 3: {0: 1, 1: 1}}
-    print(compute_marginals_given_observations(nodes, edges,
-                                               node_potentials,
-                                               edge_potentials,
-                                               observations={1: 0}))
+    #print(compute_marginals_given_observations(nodes, edges,
+    #                                           node_potentials,
+    #                                           edge_potentials,
+    #                                           observations={1: 0}))
 
 
 def test_sum_product2():
@@ -546,7 +604,7 @@ def compute_marginals_given_observations(nodes, edges, node_potentials,
     # -------------------------------------------------------------------------
     # YOUR CODE HERE
     #
-
+    return "doh"
     #
     # END OF YOUR CODE
     # -------------------------------------------------------------------------

@@ -416,19 +416,28 @@ def sum_product(nodes, edges, node_potentials, edge_potentials):
     # -------------------------------------------------------------------------
     # YOUR CODE HERE
     #
+    def calc_marginal(node):
+        #gather messages
+        incoming_messages = [v for (k,v) in messages.items() if k[1] == node]
+        marginal = node_potentials[node]
+        for m in incoming_messages:
+            marginal = vect_mult(m, marginal)
+            
+        return normalize(marginal)
+          
+
     def phipsi(target_node, neighbor):
         phi = node_potentials[target_node]
-        psi = edge_potentials[(target_node, neighbor)]        
-        inter1 = vect_matr(phi, psi);
-        inter1 = {k: sum(v.values()) for (k,v) in inter1.items()}  
-        inter1 = normalize(inter1)
-        return inter1
+        psi = edge_potentials[(target_node, neighbor)]   
+        return vect_matr(phi, psi)
     
     def calc_message(target, neighbor):
       #leaf node
       if len(edges[target]) == 1:
-        neighbor = edges[target][0]      
-        return phipsi(target, neighbor)
+        neighbor = edges[target][0]  
+        inter1 = phipsi(target, neighbor)
+        inter1 = {k: sum(v.values()) for (k,v) in inter1.items()} 
+        return normalize(inter1)
       else:
         #get the messages NOT coming from this neighbor...
         incoming_messages = []
@@ -443,8 +452,9 @@ def sum_product(nodes, edges, node_potentials, edge_potentials):
             
         inter1 = phipsi(target, neighbor)
         for m in incoming_messages:
-            inter1 = vect_mult(m, inter1)
+            inter1 = vect_matr(m, inter1)
             
+        inter1 = {k: sum(v.values()) for (k,v) in inter1.items()} 
         return normalize(inter1)
 
     #build message list
@@ -454,7 +464,8 @@ def sum_product(nodes, edges, node_potentials, edge_potentials):
         mlist.append((k,node))
 
     #print(mlist)
-
+    #loop through all the possible messages, calculating them as
+    #enough data is populated... this is a TERRIBLE way to do this...
     failsafe = 10000
     while(len(mlist) > 0 and failsafe > 0):
       failsafe -= 1
@@ -467,6 +478,10 @@ def sum_product(nodes, edges, node_potentials, edge_potentials):
       else:
         mlist.insert(0, vec)
 
+    #calculate marginals
+    #print("Marginals")
+    for n in nodes:
+      marginals[n] = calc_marginal(n)
       
     """
     messages[(4,2)] = calc_message(4, 2)
@@ -478,8 +493,8 @@ def sum_product(nodes, edges, node_potentials, edge_potentials):
     messages[(2,4)] = calc_message(2, 4)
     messages[(2,5)] = calc_message(2, 5)
     """
-    print("Messages")
-    print(messages)
+    #print("Messages")
+    #print(messages)
     
     #
     # END OF YOUR CODE
@@ -497,6 +512,9 @@ def normalize(a):
       result[k] = v/z
       
     return result
+
+#def vect_box(a,b):
+#    for row in len(a)
 
 def vect_mult(a,b):
     result = {}

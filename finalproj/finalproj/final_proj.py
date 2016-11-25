@@ -413,40 +413,44 @@ def sum_product(nodes, edges, node_potentials, edge_potentials):
     marginals = {}
     messages = {}
 
-    print("Node Potentials")
-    print(node_potentials)
-
-    depth = [];
     # -------------------------------------------------------------------------
     # YOUR CODE HERE
     #
-    def calc_down_messages(target_node):
-      depth.append(1)
-      if len(depth) > 10:
-        return
-      for neighbor in edges[target_node]:
-        if (neighbor,target_node) not in messages:       
-          incoming_messages = []
-          for child in [x for x in edges[neighbor] if x > neighbor]:
-            if (child, neighbor) not in messages:
-              calc_down_messages(neighbor)
-            incoming_messages.append(messages[(child, neighbor)])
-          phi = node_potentials[neighbor]
-          psi = edge_potentials[(target_node, neighbor)]
-          inter1 = {k: sum(v.values()) for (k,v) in vect_matr(phi, psi).items()}
-          
-          for m in incoming_messages:
+    def phipsi(target_node, neighbor):
+        phi = node_potentials[target_node]
+        psi = edge_potentials[(target_node, neighbor)]        
+        inter1 = vect_matr(phi, psi);
+        inter1 = {k: sum(v.values()) for (k,v) in inter1.items()}  
+        inter1 = normalize(inter1)
+        return inter1
+    
+    def calc_message(target, neighbor):
+      #leaf node
+      if len(edges[target]) == 1:
+        neighbor = edges[target][0]      
+        return phipsi(target, neighbor)
+      else:
+        #get the messages NOT coming from this neighbor...
+        incoming_messages = []
+        for sender in [x for x in edges[target] if x != neighbor]:
+          incoming_messages.append(messages[(sender, target)]) 
+        inter1 = phipsi(target, neighbor)
+        for m in incoming_messages:
             inter1 = vect_mult(m, inter1)
             
-          inter1 = normalize(inter1)
-          
-          messages[(neighbor,target_node)] = inter1
-    
-    for node in nodes:
-      print(node)
-      calc_down_messages(node)
+        return normalize(inter1)
+
+    messages[(4,2)] = calc_message(4, 2)
+    messages[(5,2)] = calc_message(5, 2)
+    messages[(3,1)] = calc_message(3, 1)
+    messages[(2,1)] = calc_message(2, 1)
+    messages[(1,3)] = calc_message(1, 3)
+    messages[(1,2)] = calc_message(1, 2)
+    messages[(2,4)] = calc_message(2, 4)
+    messages[(2,5)] = calc_message(2, 5)
     print("Messages")
     print(messages)
+    
     #
     # END OF YOUR CODE
     # -------------------------------------------------------------------------

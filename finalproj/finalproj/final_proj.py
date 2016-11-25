@@ -433,13 +433,42 @@ def sum_product(nodes, edges, node_potentials, edge_potentials):
         #get the messages NOT coming from this neighbor...
         incoming_messages = []
         for sender in [x for x in edges[target] if x != neighbor]:
-          incoming_messages.append(messages[(sender, target)]) 
+          
+          if (sender, target) in messages:
+            incoming_messages.append(messages[(sender, target)]) 
+          else:
+            #print("Could not find required message...Abort!")
+            #print((sender, target))
+            return None #required message wasn't found
+            
         inter1 = phipsi(target, neighbor)
         for m in incoming_messages:
             inter1 = vect_mult(m, inter1)
             
         return normalize(inter1)
 
+    #build message list
+    mlist = []
+    for (k,v) in edges.items():
+      for node in v:
+        mlist.append((k,node))
+
+    #print(mlist)
+
+    failsafe = 10000
+    while(len(mlist) > 0 and failsafe > 0):
+      failsafe -= 1
+      
+      vec = mlist.pop()
+      m = calc_message(vec[0], vec[1])
+      
+      if m != None:
+        messages[vec] = m
+      else:
+        mlist.insert(0, vec)
+
+      
+    """
     messages[(4,2)] = calc_message(4, 2)
     messages[(5,2)] = calc_message(5, 2)
     messages[(3,1)] = calc_message(3, 1)
@@ -448,6 +477,7 @@ def sum_product(nodes, edges, node_potentials, edge_potentials):
     messages[(1,2)] = calc_message(1, 2)
     messages[(2,4)] = calc_message(2, 4)
     messages[(2,5)] = calc_message(2, 5)
+    """
     print("Messages")
     print(messages)
     
